@@ -1,0 +1,1 @@
+Originally created as part of an assignment/project for my text analytics course.  This project can be used to create a biological named entity recognizer based on the GENIA shared task.  For more information see notes in the python code.
