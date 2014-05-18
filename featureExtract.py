@@ -4,6 +4,8 @@
 	
 	Written by: Steven Zimmerman
 	Date: Mar 6th 2014
+	Update: May 18th 2014, after some suggestions have simplified the regular expression functions.  There are now 2 generic regex functions to produce boolean output values.
+			~ 100 fewer lines of code and better performance
 	
 	
 	Description: Originally created as part of an assignment/project for my text analytics course.
@@ -70,76 +72,13 @@ def getPOSTags(token):
 	return POSTagsList							
 
 	
-#######ORTHOGRAPHIC FEATURES #####
-#Below are functions to return boolean values for many of the orthographic 
-#These features were extracted by almost all research groups in the shared task project
-#very straightforward.  I use regular expressions to test
-# 1 = true, 0 = false
-def getHyphenBool(token):
-	#returns bool 1 for true a hyphen is in token
-	if re.search("\-",token):
-		return 1
-	else:
-		return 0
-		
-def getCommaBool(token):
-	#returns bool 1 for true a comma is in token
-	if re.search(",",token):
-		return 1
-	else:
-		return 0	
+###### Generic RegEx test and return 0 or 1 to print to file ####
+def getRegExBool (regex, token):
+	return int(bool(re.search(regex,token)))
 
-def getCapLetterBool(token):
-	#returns bool 1 for true a Capital letter is in token
-	if re.search("[A-Z]",token):
-		return 1
-	else:
-		return 0		
-
-def getNumberBool(token):
-	#returns bool 1 for true a number is in token
-	if re.search("[0-9]",token):
-		return 1
-	else:
-		return 0	
-
-def getBackslashBool(token):
-	#returns bool 1 for true a backslash is in token
-	if re.search('\\\\',token):
-		return 1
-	else:
-		return 0	
-
-def getColonBool(token):
-	#returns bool 1 for true a colon is in token
-	if re.search(":",token):
-		return 1
-	else:
-		return 0
-
-def getSemiColonBool(token):
-	#returns bool 1 for true a semi-colon is in token
-	if re.search(";",token):
-		return 1
-	else:
-		return 0
-
-def getBracketBool(token):
-	#returns bool 1 for true a bracket is in token
-	#only look for [, I assume that if [ exists, then ] also exists
-	if re.search('\[',token) or re.search('\]',token):
-		return 1
-	else:
-		return 0		
-		
-def getParenBool(token):
-	#returns bool 1 for true a Paren is in token
-	#only look for [, I assume that if ( exists, then ) also exists
-	if re.search('\(',token) or re.search('\)',token):
-		return 1
-	else:
-		return 0			
-		
+###### Generic "Ignore case" of letters RegEx test and return 0 or 1 to print to file ####
+def getRegExNoCaseBool (regex, token):
+	return int(bool(re.search(regex, token, flags = re.IGNORECASE)))
 	
 ########	WORD SHAPE 	###############
 #I have created a word shape field as a way to normalize the tokens
@@ -155,75 +94,6 @@ def getWordShape(token):
 	wordShape = re.sub('\W', '_', wordShape, flags=0)
 
 	return wordShape
-
-	
-#######  LEXICAL INFORMATION   #####
-#Based on review of the GENIA training and test data, as well as review of papers in the shared task...
-# I have added the following lexical binary features.  These words are strongly correlated with IOB tags
-# for instance RNA and transcript are frequently associated with and RNA tag
-# The features below are 1 if they exist, else 0
-def getGreekLetterBool(token):
-	#returns bool 1 for true one of the frequently common greek letter is in token
-	if re.search( 'alpha|beta|gamma|delta|epsilon|zeta|theta|kappa|lambda' , token , flags = re.IGNORECASE):
-		return 1
-	else:
-		return 0
-		
-def getRNABool(token):
-	#returns bool 1 for true if 'RNA' is string in token
-	if re.search( 'rna' , token , flags = re.IGNORECASE):
-		return 1
-	else:
-		return 0
-
-def getCellBool(token):
-	#returns bool 1 for true  if 'cells' is string in token
-	if re.search( 'cell' , token , flags = re.IGNORECASE):
-		return 1
-	else:
-		return 0	
-
-def getGeneBool(token):
-	#returns bool 1 for true if 'gene' is string in token
-	if re.search( 'gene' , token , flags = re.IGNORECASE):
-		return 1
-	else:
-		return 0
-
-def getJurkatBool(token):
-	#returns bool 1 for true if 'jurkat' is string in token
-	if re.search( 'jurkat' , token , flags = re.IGNORECASE):
-		return 1
-	else:
-		return 0
-
-def getTranscriptBool(token):
-	#returns bool 1 for true if 'transcript' is string in token
-	if re.search( 'transcript' , token , flags = re.IGNORECASE):
-		return 1
-	else:
-		return 0
-
-def getFactorBool(token):
-	#returns bool 1 for true if 'factor' is string in token
-	if re.search( 'factor' , token , flags = re.IGNORECASE):
-		return 1
-	else:
-		return 0		
-
-def getCommonStringBool(token):
-	#returns bool 1 for true if token contains 'prot, mono, nucle, integr, macro or il-'
-	if re.search( 'prot|mono|nucle|integr|macro|il\-' , token , flags = re.IGNORECASE):
-		return 1
-	else:
-		return 0
-
-def getAnyLexBool(token):
-	#returns bool 1 for true if token contains any of the above mentioned lexical features
-	if re.search( 'alpha|beta|gamma|delta|epsilon|zeta|theta|kappa|lambda|rna|cell|gene|jurkat|transcript|factor|prot|mono|nucle|integr|macro|il\-' , token , flags = re.IGNORECASE):
-		return 1
-	else:
-		return 0	
 
 #####  IS Capital Letter by itself?   #####
 def getCapLetterByselfBool(token):
@@ -301,31 +171,37 @@ for line in inFileGenia:
 			#append token and POSTags
 			tempList.append(token)
 			tempList.append(POSTagsList[i])
-			
+
 			#append orographic features
-			tempList.append(getHyphenBool(token))
-			tempList.append(getCommaBool(token))
-			tempList.append(getCapLetterBool(token))
-			tempList.append(getNumberBool(token))
-			tempList.append(getBackslashBool(token))
-			tempList.append(getColonBool(token))
-			tempList.append(getSemiColonBool(token))
-			tempList.append(getBracketBool(token))
-			tempList.append(getParenBool(token))
+			#These features were extracted by almost all research groups in the shared task project
+			#very straightforward.  I use regular expressions to test
+			tempList.append(getRegExBool ("\-", token))			#Hyphen in token
+			tempList.append(getRegExBool (",", token))			#Comma in token
+			tempList.append(getRegExBool ("[A-Z]", token))			#Cap letter in token
+			tempList.append(getRegExBool ("[0-9]", token))			#Number in token
+			tempList.append(getRegExBool ('\\\\', token))			#Backslash in token
+			tempList.append(getRegExBool (":", token))			#Colon in token
+			tempList.append(getRegExBool (";", token))			#Semicolon in token
+			tempList.append(getRegExBool ('\[', token))			#Bracket in token (note I assume that if left bracket occurs then right bracket also occurs)
+			tempList.append(getRegExBool ('\(', token))			#Parenthese in token (note I assume that if left Paren occurs then right Paren also occurs)
 			
 			#append word shape features
 			tempList.append(getWordShape(token))
-			
+
 			#append Lexical features
-			tempList.append(getGreekLetterBool(token))
-			tempList.append(getRNABool(token))
-			tempList.append(getCellBool(token))
-			tempList.append(getGeneBool(token))
-			tempList.append(getJurkatBool(token))
-			tempList.append(getTranscriptBool(token))
-			tempList.append(getFactorBool(token))		
-			tempList.append(getCommonStringBool(token))
-			tempList.append(getAnyLexBool(token))
+			#Based on review of the GENIA training and test data, as well as review of papers in the shared task...
+			# I have added the following lexical binary features.  These words are strongly correlated with IOB tags
+			# for instance RNA and transcript are frequently associated with and RNA tag
+			tempList.append(getRegExNoCaseBool ('alpha|beta|gamma|delta|epsilon|zeta|theta|kappa|lambda', token))			#GreekLetter in token
+			tempList.append(getRegExNoCaseBool ('rna', token))																#RNA in token
+			tempList.append(getRegExNoCaseBool ('cell', token))																#Cell letter in token
+			tempList.append(getRegExNoCaseBool ('gene', token))																#Gene in token
+			tempList.append(getRegExNoCaseBool ('jurkat', token))															#Jurkat in token
+			tempList.append(getRegExNoCaseBool ('transcript', token))														#Transcript in token
+			tempList.append(getRegExNoCaseBool ('factor', token))															#Factor in token
+			tempList.append(getRegExNoCaseBool ('prot|mono|nucle|integr|macro|il\-', token))								#Common string associated with RNA, DNA, etc
+			tempList.append(getRegExNoCaseBool ('alpha|beta|gamma|delta|epsilon|zeta|theta|kappa|lambda|rna|cell|gene|jurkat|transcript|factor|prot|mono|nucle|integr|macro|il\-' , token))			#Any above mentioned Lexical features
+			
 			
 			#other features
 			tempList.append(getCapLetterByselfBool(token))
